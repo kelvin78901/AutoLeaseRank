@@ -1,7 +1,8 @@
 # AutoLeaseRank
 
 Python 3.10+, FastAPI + DuckDB + Polars + LightGBM. Read HANDOFF_CLAUDE_CODE.md for how the
-system works. Interpreter: `.venv/bin/python` (never bare `python3`). Tests: `.venv/bin/python -m pytest -q tests`.
+system works. Interpreter: `/Users/kelvin/Downloads/autoleaserank/.venv/bin/python` (absolute: macc worktrees have no `.venv`; never bare `python3`).
+Run with `PYTHONPATH=.`. Tests: `PYTHONPATH=. /Users/kelvin/Downloads/autoleaserank/.venv/bin/python -m pytest -q tests`.
 
 Hard rules for any automated worker:
 - No network. Never run crawlers, Playwright, or anything under `alr/adapters/`, `alr/scheduler.py`,
