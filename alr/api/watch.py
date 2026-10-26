@@ -15,7 +15,7 @@ from fastapi.exception_handlers import (
     request_validation_exception_handler,
 )
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, PlainTextResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from ..store import db
@@ -86,7 +86,8 @@ def watch_matches(
 
 
 def _is_watch_path(request: Request) -> bool:
-    return request.url.path.startswith("/watch")
+    path = request.url.path
+    return path == "/watch" or path.startswith("/watch/")
 
 
 def _validation_message(exc: RequestValidationError) -> str:
@@ -113,3 +114,11 @@ def install_error_handlers(app: FastAPI) -> None:
         if _is_watch_path(request):
             return JSONResponse({"error": _validation_message(exc)}, status_code=422)
         return await request_validation_exception_handler(request, exc)
+
+    @app.exception_handler(Exception)
+    async def _unexpected_error(request: Request, exc: Exception):
+        # Runs inside ServerErrorMiddleware, which re-raises after responding,
+        # so the error is still logged either way.
+        if _is_watch_path(request):
+            return JSONResponse({"error": "internal error"}, status_code=500)
+        return PlainTextResponse("Internal Server Error", status_code=500)
