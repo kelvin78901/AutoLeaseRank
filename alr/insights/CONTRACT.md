@@ -182,6 +182,7 @@ copied from `HistoryPoint.crawl_ts`, so they are aware UTC too.
   validation errors: 422 with a message built by `alr.api.watch._validation_message`; unexpected errors:
   500 {"error": "internal error"}). Every other path is delegated to the previously registered handler,
   so /watch and the default FastAPI formats are byte-for-byte unchanged. alr/api/watch.py is not modified.
+  Superseded by alr/api/CONTRACT.md: errors are installed once via `alr.api.errors.install_json_errors`.
 - Routes are registered flat (like the /watch loop in main.py) BEFORE the static `app.mount("/", ...)`.
 
 *(clarification)*

@@ -1,20 +1,14 @@
 """/insights endpoints: segment stats, price history, dropping-now, comparables, data quality.
 
-Errors under /insights render as {"error": msg}; every other path keeps whatever
-handlers were registered before install_insights_error_handlers ran.
+Errors under /insights render as {"error": msg} via alr.api.errors, as configured
+in main.py.
 """
 from __future__ import annotations
 
 from datetime import datetime, timezone
 from typing import Literal
 
-from fastapi import APIRouter, Depends, FastAPI, Query, Request
-from fastapi.exception_handlers import (
-    http_exception_handler,
-    request_validation_exception_handler,
-)
-from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi import APIRouter, Depends, Query
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
 from ..insights.comparables import find_comparables
@@ -27,18 +21,12 @@ from ..insights.models import (
 )
 from ..insights.quality import source_quality
 from ..insights.segments import segment_stats
-from ..store import db
-from .watch import _validation_message
+from .common import get_con
 
 router = APIRouter()
 
 
-def get_insights_con():
-    con = db.connect()
-    try:
-        yield con
-    finally:
-        con.close()
+get_insights_con = get_con  # back-compat alias
 
 
 def get_insights_snapshot():
@@ -57,7 +45,7 @@ def segments(
 
 
 @router.get("/insights/history/{listing_key:path}", response_model=HistoryResponse)
-def history(listing_key: str, con=Depends(get_insights_con)):
+def history(listing_key: str, con=Depends(get_con)):
     points = listing_timeline(load_history(con, listing_key), listing_key)
     if not points:
         raise StarletteHTTPException(404, f"no history for listing {listing_key}")
@@ -67,7 +55,7 @@ def history(listing_key: str, con=Depends(get_insights_con)):
 @router.get("/insights/dropping", response_model=DroppingResponse)
 def dropping(
     limit: int = Query(DEFAULT_DROPPING_LIMIT, ge=1, le=MAX_DROPPING_LIMIT),
-    con=Depends(get_insights_con),
+    con=Depends(get_con),
 ):
     items = dropping_now(load_history(con), limit)
     return DroppingResponse(count=len(items), limit=limit, items=items)
@@ -96,39 +84,3 @@ def quality(
     now = datetime.now(timezone.utc)
     return QualityResponse(stale_days=stale_days, as_of=now,
                            sources=source_quality(listings, stale_days, now))
-
-
-def _is_insights_path(request: Request) -> bool:
-    path = request.url.path
-    return path == "/insights" or path.startswith("/insights/")
-
-
-async def _default_unexpected(request: Request, exc: Exception):
-    return PlainTextResponse("Internal Server Error", status_code=500)
-
-
-def install_insights_error_handlers(app: FastAPI) -> None:
-    """Render /insights errors as {"error": msg}; delegate other paths to the prior handlers."""
-    prev = dict(app.exception_handlers)
-    prev_http = prev.get(StarletteHTTPException, http_exception_handler)
-    prev_val = prev.get(RequestValidationError, request_validation_exception_handler)
-    prev_exc = prev.get(Exception, _default_unexpected)
-
-    @app.exception_handler(StarletteHTTPException)
-    async def _http_error(request: Request, exc: StarletteHTTPException):
-        if _is_insights_path(request):
-            return JSONResponse({"error": str(exc.detail)}, status_code=exc.status_code,
-                                headers=getattr(exc, "headers", None))
-        return await prev_http(request, exc)
-
-    @app.exception_handler(RequestValidationError)
-    async def _validation_error(request: Request, exc: RequestValidationError):
-        if _is_insights_path(request):
-            return JSONResponse({"error": _validation_message(exc)}, status_code=422)
-        return await prev_val(request, exc)
-
-    @app.exception_handler(Exception)
-    async def _unexpected_error(request: Request, exc: Exception):
-        if _is_insights_path(request):
-            return JSONResponse({"error": "internal error"}, status_code=500)
-        return await prev_exc(request, exc)
