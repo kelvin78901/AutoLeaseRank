@@ -110,7 +110,7 @@ def _build(calls: list[str]):
     def item():
         return {"id": 1, "name": "n", "note": None, "secret": "x"}
 
-    @rt.api_route("/multi", methods=["GET", "POST"])
+    @rt.api_route("/multi", methods=["GET", "POST"], operation_id="multi_op")
     def multi():
         return {"m": 1}
 
