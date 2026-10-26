@@ -62,6 +62,8 @@ Nothing to run. When a description arrives:
   `gate_policy: per_task`); `gate_reused`: a merge skipped re-running a task's `done_when` because the
   tree was identical. `final_gate_failed`: the end-of-run full suite failed; nothing was rolled back,
   the event lists the merge order. Find the culprit (usually the last merges), fix with `change`, re-run.
+- `review_tier`: how the review was rated for this plan's change (`low` runs on sonnet/medium, `high`
+  keeps the plan's model) and why; the same facts are at the top of the reviewer's context pack.
 - `integrate_skipped`: the integrate task had nothing to do (full suite and its own done_when green on
   the integration tree, no open debts, no open_questions upstream); marked DONE without a worker.
 - `serial_bottleneck`: a task that every other remaining task waits for ran > 3x its estimate. The run
