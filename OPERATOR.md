@@ -5,58 +5,65 @@ You are the **operator** session (no `MACC_TASK` in your environment). macc sour
 
 ```bash
 MACC="$HOME/MultiAccelerateCC/.venv/bin/python -m macc.cli"
-PY="$HOME/Downloads/AutoLeaseRank/.venv/bin/python"
+PY="/Users/kelvin/Downloads/autoleaserank/.venv/bin/python"
 ```
 
-## Current job: first real-repo trial (plan only, then stop)
+## Setup (done; for reference)
+- `.macc/` initialised. Integration gate recorded with
+  `$MACC init --gate "PYTHONPATH=. $PY -m pytest -q tests"` (macc verifies it on the integration tree;
+  the planner sees it). There is no `gate.sh`.
+- `.macc/rules.md` is a copy of `rules.md` (prepended to every worker prompt). Both it and CLAUDE.md
+  use the absolute interpreter path: worktrees have no `.venv`.
+- Interpreter for anything you run: `PYTHONPATH=. $PY` (the package is not pip-installed).
 
-1. **Baseline**
-   - `$PY -m pip install -q pytest` (pytest is missing from the project venv).
-   - `$PY -m pytest -q tests` must print `2 passed`. If not, stop and report.
-   - `git status --short` should show only `.DS_Store`; leave it.
-2. **Init macc**
-   - `$MACC init`
-   - Write `.macc/gate.sh` containing exactly:
-     ```
-     #!/usr/bin/env bash
-     cd "$(dirname "$0")/.." 2>/dev/null || true
-     "$HOME/Downloads/AutoLeaseRank/.venv/bin/python" -m pytest -q tests; rc=$?; [ $rc -eq 0 ] || [ $rc -eq 5 ]
-     ```
-     then `chmod +x .macc/gate.sh`. Note: gates run inside `.macc/worktrees/_integration`, so the
-     script must `cd` to that worktree root (the line above does) and must use the absolute venv python.
-   - Copy the provided `rules.md` to `.macc/rules.md` (it is prepended to every worker prompt).
-   - Verify the gate on the integration worktree: `bash .macc/gate.sh; echo rc=$?` → expect `2 passed`, rc=0.
-3. **Plan** (one planner call, ~$0.6; do NOT load or run):
-   ```
-   $MACC plan --from 'Add saved searches ("watches") to AutoLeaseRank. A watch is a set of criteria:
-   optional make, optional model, max_effective_monthly (float), min_score (0-99), max_miles_per_month,
-   plus a name and created_at. Persist watches in the existing DuckDB (new table; create it through the
-   same connect/setup path production uses). Matching: given the current scored snapshot
-   (store.load_current + the ranker output as already exposed by /top_deals), return listings that
-   satisfy every set criterion, ordered by score desc, capped by a limit. HTTP API in a new APIRouter
-   mounted in alr/api/main.py: POST /watch (create, 201), GET /watch (list), GET /watch/{id},
-   DELETE /watch/{id} (204 / 404), GET /watch/{id}/matches?limit=N. All errors JSON {"error": str}.
-   Everything must be testable offline with an in-memory DuckDB and fixture listings; tests for the
-   store, the matcher, and the API (FastAPI TestClient) in tests/. Do not touch alr/adapters, the
-   scheduler, or the pipeline runner. Keep stdlib + existing deps only.' --effort high plan_watch.yaml
-   ```
-4. **Report back, then stop** (do not `macc plan plan_watch.yaml`, do not `macc run`):
-   - the printed task list, any SCOPE NOTE, and every WARNING line;
-   - the planner cost from `$MACC status` (usage line) and wall time;
-   - your own read of `plan_watch.yaml`: are `owns` disjoint and do they exclude `alr/adapters/**`?
-     Does the task that edits `alr/api/main.py` own it and say it *modifies* it? Do test tasks use
-     `merge_after`? Are `done_when` commands using `.venv/bin/python`? Is the integration gate
-     `bash .macc/gate.sh` reused? Anything that would fail on first run?
-   - anything about macc itself that looks wrong.
+## Commands
+```bash
+$MACC plan --from '<feature>' --effort high plan_x.yaml   # one planner call (~$1); review before loading
+$MACC plan plan_x.yaml          # load it
+$MACC run --parallel 4          # run until nothing is runnable; safe to re-run after a crash
+$MACC status                    # task states, debts, usage/cost, actual/est per kind
+$MACC events -f                 # live event log (second terminal)
+$MACC events --task <id>        # history of one task
+$MACC change <id> --spec "..." [--owns ...] [--done-when ...] --why "..."   # redo a task
+$MACC retry <id>                # reset a FAILED/BLOCKED task
+```
+Never put a commit hash in a spec or `done_when`; use `$MACC_BASE` (merge-base of `macc/integration`
+and main) / `$MACC_INTEGRATION`, which macc exports to every worker and gate.
+
+## Done so far
+- Saved searches ("watches"): `plan_watch.yaml`, 9 tasks, all first-try; review round 1 (M1 JSON 500s,
+  M2 non-finite numbers, L1 exact `/watch` prefix) via `macc change`. 59 tests, review APPROVE,
+  $6.13 incl. planning. Merging `macc/integration` into main is Kelvin's decision.
+- CLAUDE.md and rules.md use the absolute interpreter (commit on main).
+
+## Current job: waiting for Kelvin's next feature description
+Nothing to run. When a description arrives:
+1. `git -C .macc/worktrees/_integration merge --ff-only main` if main moved (workers fork from integration).
+2. `$MACC plan --from '<description>' --effort high plan_<name>.yaml`.
+3. Report the task list, SCOPE NOTE, every WARNING, the planner cost, and your own review of the plan
+   (owns disjoint and outside `alr/adapters/**`; tasks that modify existing files own them and say so;
+   test tasks use `merge_after`; `done_when` uses `$PY`; nothing that fails on first run).
+4. Wait for a go before `plan` + `run`. After the run: events list, review verdict, your own check of
+   the result against the code, cost (`cost_this_run`) and wall time.
+
+## Event cheat-sheet
+- `retry`: normal. `failed`: read `$MACC events --task <id>` and `.macc/context/<id>.md`; fix the spec
+  with `change`, then `run`. Do not hand-edit worktrees; if you must, say so.
+- `gate_broken_baseline` / `blocked`: environment problem; fix, then `retry`.
+- `awaiting_merge`: waiting for `merge_after` targets; normal. `merge_blocked`: a target failed; fix it,
+  then `retry` the blocked task.
+- `ownership_violation`: the plan's `owns` is wrong; `change --owns`. `artifacts_discarded`: informational.
+- `transient_failure`: retried with back-off, not charged. `transient_limit`: BLOCKED; wait, `retry`.
+- `orphan_reset` / `parked_reset`: a previous run ended mid-task; just `run` again.
+- `review_rejected`: automatic reopen (the `REOPEN:` line names the tasks); report if it happens twice.
+- `rules_conflict`: `.macc/rules.md` and the CLAUDE.md the worker sees disagree on the interpreter
+  path. Advisory; usually the integration branch has an old CLAUDE.md: fast-forward it to main.
+- `budget_exceeded`: stop and report; do not raise the budget without asking.
 
 ## Rules
-- Do NOT merge `macc/integration` into `main`.
-- Do NOT delete `.macc/` or `macc/*` branches. Do NOT edit `~/MultiAccelerateCC`.
-- Do NOT run crawlers, Playwright, docker, or the scheduler. Do NOT touch `data/`.
-- Keep CLAUDE.md and HANDOFF_CLAUDE_CODE.md as they are.
-
-## Event cheat-sheet (for the run phase, later)
-retry = normal; failed = read `$MACC events --task <id>` and `.macc/context/<id>.md`;
-gate_broken_baseline / blocked = environment, fix then `retry`; awaiting_merge = waiting for merge_after;
-ownership_violation = plan's owns wrong, `change --owns`; transient_failure = retried, ignore;
-review_rejected = automatic; budget_exceeded = stop and report.
+- Do NOT merge `macc/integration` into `main` unless Kelvin says so.
+- Do NOT delete `.macc/` or `macc/*` branches.
+- macc bugs: fix them directly in `~/MultiAccelerateCC`, add tests, keep `python -m pytest -q` green,
+  commit and push, and list every such fix in your report.
+- Do NOT run crawlers, Playwright, docker, or the scheduler. Do NOT touch `data/`. Never call Marketcheck.
+- Keep CLAUDE.md and HANDOFF_CLAUDE_CODE.md as they are (CLAUDE.md changes only for worker-facing rules).
