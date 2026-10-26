@@ -9,29 +9,15 @@ Endpoints:
 """
 from __future__ import annotations
 
-from fastapi import APIRouter, Depends, FastAPI, Query, Request, Response
-from fastapi.exception_handlers import (
-    http_exception_handler,
-    request_validation_exception_handler,
-)
-from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse, PlainTextResponse
+from fastapi import APIRouter, Depends, Query, Response
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
-from ..store import db
 from ..store import watches as store
 from ..watch.matcher import match_watch, scored_snapshot
 from ..watch.models import DEFAULT_MATCH_LIMIT, MAX_MATCH_LIMIT, Watch, WatchCreate
+from .common import get_con
 
 router = APIRouter()
-
-
-def get_con():
-    con = db.connect()
-    try:
-        yield con
-    finally:
-        con.close()
 
 
 def get_snapshot():
@@ -83,42 +69,3 @@ def watch_matches(
     hits = match_watch(watch, scored, limit)
     return {"watch": watch.model_dump(mode="json"), "count": len(hits),
             "matches": [h.model_dump(mode="json") for h in hits]}
-
-
-def _is_watch_path(request: Request) -> bool:
-    path = request.url.path
-    return path == "/watch" or path.startswith("/watch/")
-
-
-def _validation_message(exc: RequestValidationError) -> str:
-    parts = []
-    for err in exc.errors():
-        loc = ".".join(str(p) for p in err.get("loc", ()))
-        msg = err.get("msg", "invalid")
-        parts.append(f"{loc}: {msg}" if loc else msg)
-    return "; ".join(parts) or "invalid request"
-
-
-def install_error_handlers(app: FastAPI) -> None:
-    """Render /watch errors as {"error": msg}; leave every other path on FastAPI defaults."""
-
-    @app.exception_handler(StarletteHTTPException)
-    async def _http_error(request: Request, exc: StarletteHTTPException):
-        if _is_watch_path(request):
-            return JSONResponse({"error": str(exc.detail)}, status_code=exc.status_code,
-                                headers=getattr(exc, "headers", None))
-        return await http_exception_handler(request, exc)
-
-    @app.exception_handler(RequestValidationError)
-    async def _validation_error(request: Request, exc: RequestValidationError):
-        if _is_watch_path(request):
-            return JSONResponse({"error": _validation_message(exc)}, status_code=422)
-        return await request_validation_exception_handler(request, exc)
-
-    @app.exception_handler(Exception)
-    async def _unexpected_error(request: Request, exc: Exception):
-        # Runs inside ServerErrorMiddleware, which re-raises after responding,
-        # so the error is still logged either way.
-        if _is_watch_path(request):
-            return JSONResponse({"error": "internal error"}, status_code=500)
-        return PlainTextResponse("Internal Server Error", status_code=500)

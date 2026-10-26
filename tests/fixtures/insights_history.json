@@ -1,0 +1,226 @@
+[
+ {
+  "crawl_ts": "2026-10-13T06:00:00+00:00",
+  "listing_key": "leasehackr:2001",
+  "effective_monthly": 845.0,
+  "days_on_market": 16,
+  "price_drops": 3,
+  "favorites": 7
+ },
+ {
+  "crawl_ts": "2026-10-13T06:00:00+00:00",
+  "listing_key": "leasehackr:2004",
+  "effective_monthly": 600.0,
+  "days_on_market": 16,
+  "price_drops": 2,
+  "favorites": 6
+ },
+ {
+  "crawl_ts": "2026-10-13T06:00:00+00:00",
+  "listing_key": "swapalease:3006",
+  "effective_monthly": 610.0,
+  "days_on_market": 16,
+  "price_drops": 1,
+  "favorites": 5
+ },
+ {
+  "crawl_ts": "2026-10-13T06:00:00+00:00",
+  "listing_key": "marketcheck:4001",
+  "effective_monthly": 1180.0,
+  "days_on_market": 16,
+  "price_drops": 3,
+  "favorites": 7
+ },
+ {
+  "crawl_ts": "2026-10-13T06:00:00+00:00",
+  "listing_key": "leasehackr:2008",
+  "effective_monthly": 690.0,
+  "days_on_market": 16,
+  "price_drops": 3,
+  "favorites": 7
+ },
+ {
+  "crawl_ts": "2026-10-13T06:00:00+00:00",
+  "listing_key": "swapalease:3001",
+  "effective_monthly": 381.0,
+  "days_on_market": 16,
+  "price_drops": 3,
+  "favorites": 7
+ },
+ {
+  "crawl_ts": "2026-10-13T06:00:00+00:00",
+  "listing_key": "leasehackr:2005",
+  "effective_monthly": 640.0,
+  "days_on_market": 16,
+  "price_drops": 0,
+  "favorites": 4
+ },
+ {
+  "crawl_ts": "2026-10-13T06:00:00+00:00",
+  "listing_key": "marketcheck:4002",
+  "effective_monthly": 1099.0,
+  "days_on_market": 16,
+  "price_drops": 3,
+  "favorites": 7
+ },
+ {
+  "crawl_ts": "2026-10-01T06:00:00+00:00",
+  "listing_key": "leasehackr:2001",
+  "effective_monthly": 900.0,
+  "days_on_market": 4,
+  "price_drops": 0,
+  "favorites": 1
+ },
+ {
+  "crawl_ts": "2026-10-01T06:00:00+00:00",
+  "listing_key": "swapalease:3006",
+  "effective_monthly": 650.0,
+  "days_on_market": 4,
+  "price_drops": 0,
+  "favorites": 1
+ },
+ {
+  "crawl_ts": "2026-10-01T06:00:00+00:00",
+  "listing_key": "marketcheck:4001",
+  "effective_monthly": 1250.0,
+  "days_on_market": 4,
+  "price_drops": 0,
+  "favorites": 1
+ },
+ {
+  "crawl_ts": "2026-10-01T06:00:00+00:00",
+  "listing_key": "leasehackr:2008",
+  "effective_monthly": 720.0,
+  "days_on_market": 4,
+  "price_drops": 0,
+  "favorites": 1
+ },
+ {
+  "crawl_ts": "2026-10-01T06:00:00+00:00",
+  "listing_key": "swapalease:3001",
+  "effective_monthly": 381.0,
+  "days_on_market": 4,
+  "price_drops": 0,
+  "favorites": 1
+ },
+ {
+  "crawl_ts": "2026-10-01T06:00:00+00:00",
+  "listing_key": "swapalease:3999",
+  "effective_monthly": 480.0,
+  "days_on_market": 4,
+  "price_drops": 0,
+  "favorites": 1
+ },
+ {
+  "crawl_ts": "2026-10-01T06:00:00+00:00",
+  "listing_key": "marketcheck:4002",
+  "effective_monthly": null,
+  "days_on_market": null,
+  "price_drops": null,
+  "favorites": null
+ },
+ {
+  "crawl_ts": "2026-10-09T06:00:00+00:00",
+  "listing_key": "leasehackr:2001",
+  "effective_monthly": 870.0,
+  "days_on_market": 12,
+  "price_drops": 2,
+  "favorites": 5
+ },
+ {
+  "crawl_ts": "2026-10-09T06:00:00+00:00",
+  "listing_key": "leasehackr:2004",
+  "effective_monthly": 640.0,
+  "days_on_market": 12,
+  "price_drops": 1,
+  "favorites": 4
+ },
+ {
+  "crawl_ts": "2026-10-09T06:00:00+00:00",
+  "listing_key": "marketcheck:4001",
+  "effective_monthly": 1250.0,
+  "days_on_market": 12,
+  "price_drops": 2,
+  "favorites": 5
+ },
+ {
+  "crawl_ts": "2026-10-09T06:00:00+00:00",
+  "listing_key": "leasehackr:2008",
+  "effective_monthly": 680.0,
+  "days_on_market": 12,
+  "price_drops": 2,
+  "favorites": 5
+ },
+ {
+  "crawl_ts": "2026-10-09T06:00:00+00:00",
+  "listing_key": "swapalease:3001",
+  "effective_monthly": 381.0,
+  "days_on_market": 12,
+  "price_drops": 2,
+  "favorites": 5
+ },
+ {
+  "crawl_ts": "2026-10-09T06:00:00+00:00",
+  "listing_key": "marketcheck:4002",
+  "effective_monthly": 1130.0,
+  "days_on_market": 12,
+  "price_drops": 2,
+  "favorites": 5
+ },
+ {
+  "crawl_ts": "2026-10-05T06:00:00+00:00",
+  "listing_key": "leasehackr:2001",
+  "effective_monthly": 880.0,
+  "days_on_market": 8,
+  "price_drops": 1,
+  "favorites": 3
+ },
+ {
+  "crawl_ts": "2026-10-05T06:00:00+00:00",
+  "listing_key": "leasehackr:2004",
+  "effective_monthly": 650.0,
+  "days_on_market": 8,
+  "price_drops": 0,
+  "favorites": 2
+ },
+ {
+  "crawl_ts": "2026-10-05T06:00:00+00:00",
+  "listing_key": "marketcheck:4001",
+  "effective_monthly": 1220.0,
+  "days_on_market": 8,
+  "price_drops": 1,
+  "favorites": 3
+ },
+ {
+  "crawl_ts": "2026-10-05T06:00:00+00:00",
+  "listing_key": "leasehackr:2008",
+  "effective_monthly": 680.0,
+  "days_on_market": 8,
+  "price_drops": 1,
+  "favorites": 3
+ },
+ {
+  "crawl_ts": "2026-10-05T06:00:00+00:00",
+  "listing_key": "swapalease:3001",
+  "effective_monthly": 381.0,
+  "days_on_market": 8,
+  "price_drops": 1,
+  "favorites": 3
+ },
+ {
+  "crawl_ts": "2026-10-05T06:00:00+00:00",
+  "listing_key": "swapalease:3999",
+  "effective_monthly": 450.0,
+  "days_on_market": 8,
+  "price_drops": 1,
+  "favorites": 3
+ },
+ {
+  "crawl_ts": "2026-10-05T06:00:00+00:00",
+  "listing_key": "marketcheck:4002",
+  "effective_monthly": 1150.0,
+  "days_on_market": 8,
+  "price_drops": 1,
+  "favorites": 3
+ }
+]
