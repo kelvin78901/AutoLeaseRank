@@ -2,6 +2,7 @@
 dependencies, TestClient used without a `with` block so startup never touches data/."""
 from datetime import datetime
 
+import duckdb
 import pytest
 from fastapi.testclient import TestClient
 
@@ -165,6 +166,38 @@ def test_matches_none_satisfy(client):
 
 def test_non_watch_errors_keep_default_format(client):
     r = client.get("/listing/does-not-exist")
+    assert r.status_code == 404
+    body = r.json()
+    assert "detail" in body
+    assert "error" not in body
+
+
+def test_unhandled_db_error_is_json_500(mem_con, enriched_listings):
+    def broken_con():
+        raise duckdb.IOException("Could not set lock on file")
+        yield  # pragma: no cover
+
+    app.dependency_overrides[get_con] = broken_con
+    app.dependency_overrides[get_snapshot] = lambda: (enriched_listings, None)
+    try:
+        r = TestClient(app, raise_server_exceptions=False).get("/watch")
+    finally:
+        app.dependency_overrides.clear()
+    assert r.status_code == 500
+    assert r.headers["content-type"].startswith("application/json")
+    assert r.json() == {"error": "internal error"}
+
+
+@pytest.mark.parametrize("literal", ["Infinity", "-Infinity", "NaN"])
+def test_post_non_finite_max_effective_monthly_is_422(client, literal):
+    raw = '{"name": "x", "max_effective_monthly": %s}' % literal
+    r = client.post("/watch", content=raw, headers={"content-type": "application/json"})
+    _assert_error_shape(r, 422)
+
+
+@pytest.mark.parametrize("path", ["/watchx", "/watchlist"])
+def test_watch_prefix_lookalikes_keep_default_format(client, path):
+    r = client.get(path)
     assert r.status_code == 404
     body = r.json()
     assert "detail" in body
