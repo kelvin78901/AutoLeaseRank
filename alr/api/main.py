@@ -9,6 +9,11 @@ Endpoints:
   POST /recommend                 same, body = full Prefs JSON
   GET /vehicle/{vin}              one decoded + scored listing
   POST /reload                    re-read snapshot + model from disk
+  POST /watch                     create a watch (saved search)
+  GET /watch                      list watches
+  GET /watch/{watch_id}           one watch
+  DELETE /watch/{watch_id}        delete a watch
+  GET /watch/{watch_id}/matches   current snapshot matches for a watch
 """
 from __future__ import annotations
 
@@ -23,9 +28,14 @@ from ..config import ROOT
 from ..rank.pipeline import Prefs, rank, is_used
 from ..rank.ltr import LTRScorer
 from ..store import db as _db
+from .watch import install_error_handlers, router as watch_router
 
 app = FastAPI(title="AutoLeaseRank", version="0.4")
 app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_methods=["*"], allow_headers=["*"])
+for _r in watch_router.routes:  # flat routes: include_router is lazy in newer FastAPI
+    app.add_api_route(_r.path, _r.endpoint, methods=sorted(_r.methods),
+                      status_code=_r.status_code, response_model=_r.response_model)
+install_error_handlers(app)
 
 
 class _State:
