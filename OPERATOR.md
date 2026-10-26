@@ -62,6 +62,8 @@ Nothing to run. When a description arrives:
   `gate_policy: per_task`); `gate_reused`: a merge skipped re-running a task's `done_when` because the
   tree was identical. `final_gate_failed`: the end-of-run full suite failed; nothing was rolled back,
   the event lists the merge order. Find the culprit (usually the last merges), fix with `change`, re-run.
+- `integrate_skipped`: the integrate task had nothing to do (full suite and its own done_when green on
+  the integration tree, no open debts, no open_questions upstream); marked DONE without a worker.
 - `serial_bottleneck`: a task that every other remaining task waits for ran > 3x its estimate. The run
   summary's `serial.share` is the fraction of wall time spent in such tasks: split there next time.
 - `budget_deferred`: a task waits because running tasks' expected cost would not fit; it is dispatched
