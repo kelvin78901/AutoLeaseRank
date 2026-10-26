@@ -58,6 +58,10 @@ Nothing to run. When a description arrives:
 - `review_rejected`: automatic reopen (the `REOPEN:` line names the tasks); report if it happens twice.
 - `rules_conflict`: `.macc/rules.md` and the CLAUDE.md the worker sees disagree on the interpreter
   path. Advisory; usually the integration branch has an old CLAUDE.md: fast-forward it to main.
+- `full_gate`: the full suite ran (after an `integrate` merge or at the end of the run under
+  `gate_policy: per_task`); `gate_reused`: a merge skipped re-running a task's `done_when` because the
+  tree was identical. `final_gate_failed`: the end-of-run full suite failed; nothing was rolled back,
+  the event lists the merge order. Find the culprit (usually the last merges), fix with `change`, re-run.
 - `budget_exceeded`: stop and report; do not raise the budget without asking.
 
 ## Rules
