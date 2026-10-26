@@ -95,6 +95,7 @@ folding happens only in the matcher.
 - `install_error_handlers(app)`: for requests whose path starts with "/watch", HTTPException and
   RequestValidationError render as JSON `{"error": "<message>"}` with the original status code;
   all other paths delegate to FastAPI's default handlers (fastapi.exception_handlers).
+  Superseded by alr/api/CONTRACT.md: errors are installed once via `alr.api.errors.install_json_errors`.
 - POST /watch, body WatchCreate -> 201, Watch JSON
 - GET /watch -> 200, list of Watch (id asc)
 - GET /watch/{watch_id} -> 200 Watch | 404 {"error": "watch <id> not found"}
