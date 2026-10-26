@@ -62,6 +62,9 @@ Nothing to run. When a description arrives:
   `gate_policy: per_task`); `gate_reused`: a merge skipped re-running a task's `done_when` because the
   tree was identical. `final_gate_failed`: the end-of-run full suite failed; nothing was rolled back,
   the event lists the merge order. Find the culprit (usually the last merges), fix with `change`, re-run.
+- `worktree_setup_failed`: a `worktree_setup` command (config list, run in every new worktree and the
+  integration worktree, with MACC_REPO_ROOT / MACC_WORKTREE) failed. The task is BLOCKED (not charged);
+  for the integration worktree the run stops dispatching. Make the commands idempotent (`ln -sfn`).
 - `prediction` (run start) and `run_finished.prediction`: the cost model's wall / cost / serial share and,
   at the end, its error against the actual run. `flake_check` / `flaky_tests`: the plan's new test files
   re-run with random seeds at integrate; a flaky result is reported with the seed that reproduces it.
