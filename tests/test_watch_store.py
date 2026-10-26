@@ -110,6 +110,17 @@ def test_delete_watch_true_then_false_and_others_remain(mem_con):
     assert d.id > c.id
 
 
+def test_connect_without_args_opens_db_path(tmp_path, monkeypatch):
+    path = tmp_path / "default.duckdb"
+    monkeypatch.setattr(db, "DB_PATH", path)
+    con = db.connect()
+    try:
+        assert "watches" in _tables(con)
+    finally:
+        con.close()
+    assert path.exists()
+
+
 def test_persistence_across_connections(tmp_path):
     path = tmp_path / "w.duckdb"
     con = db.connect(path)

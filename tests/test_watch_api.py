@@ -7,7 +7,8 @@ from fastapi.testclient import TestClient
 
 from alr.api.main import app
 from alr.api.watch import get_con, get_snapshot
-from alr.watch.models import MAX_MATCH_LIMIT
+from alr.watch.matcher import match_watch, scored_snapshot
+from alr.watch.models import DEFAULT_MATCH_LIMIT, MAX_MATCH_LIMIT, Watch
 
 VALID = {"name": "cheap bmw", "max_effective_monthly": 700}
 
@@ -57,11 +58,29 @@ def test_post_echoes_all_criteria(client):
 
 @pytest.mark.parametrize("body", [
     {**VALID, "min_score": 100},
+    {**VALID, "min_score": -1},
     {"name": "x"},
     {**VALID, "name": ""},
+    {**VALID, "name": "   "},
+    {**VALID, "name": "x" * 101},
+    {**VALID, "max_effective_monthly": 0},
+    {**VALID, "max_effective_monthly": -5},
+    {**VALID, "max_miles_per_month": 0},
 ])
 def test_post_invalid_body_is_422_error(client, body):
     _assert_error_shape(client.post("/watch", json=body), 422)
+
+
+def test_post_missing_body_is_422_error(client):
+    _assert_error_shape(client.post("/watch"), 422)
+
+
+def test_watch_routes_registered_before_static_mount():
+    paths = [getattr(r, "path", None) for r in app.routes]
+    assert {"/watch", "/watch/{watch_id}", "/watch/{watch_id}/matches"} <= set(paths)
+    mounts = [i for i, r in enumerate(app.routes) if type(r).__name__ == "Mount"]
+    if mounts:
+        assert max(i for i, p in enumerate(paths) if p and p.startswith("/watch")) < mounts[0]
 
 
 def test_list_watches_empty_then_ordered(client):
@@ -111,6 +130,14 @@ def test_matches_satisfy_all_criteria_and_sorted(client):
         assert m["miles_per_month"] <= 1500
     scores = [m["personalized_score"] for m in ms]
     assert scores == sorted(scores, reverse=True)
+
+
+def test_matches_default_limit_equals_matcher(client, enriched_listings):
+    w = _create(client, max_effective_monthly=10_000)
+    body = client.get(f"/watch/{w['id']}/matches").json()
+    assert body["count"] == len(body["matches"]) <= DEFAULT_MATCH_LIMIT
+    expected = match_watch(Watch(**w), scored_snapshot(enriched_listings))
+    assert [m["listing_key"] for m in body["matches"]] == [s.listing_key for s in expected]
 
 
 def test_matches_limit_caps_and_validates(client):
