@@ -230,6 +230,23 @@ curl -X POST localhost:8000/watch -H 'content-type: application/json' \
   -d '{"name":"cheap bmw","make":"BMW","max_effective_monthly":700,"min_score":40}'
 ```
 
+### Market insights
+
+Read-only analytics over the current snapshot and the `history` table. All are `GET`; errors on
+`/insights*` return `{"error": "..."}`. Contract: `alr/insights/CONTRACT.md`.
+
+| Path | Params | Returns |
+|---|---|---|
+| `/insights/segments` | `group_by=make\|body\|state` (default `make`), `min_count` ≥ 1 (default 1) | count and p10/p50/p90 effective $/mo per group |
+| `/insights/history/{listing_key}` | none | that listing's crawl-by-crawl price timeline; 404 if no history |
+| `/insights/dropping` | `limit` 1..500 (default 20) | listings whose latest crawl is cheaper than the previous one, biggest $ drop first |
+| `/insights/comparables/{listing_key}` | `k` 1..50 (default 5) | nearest same-body listings by (hp, effective $/mo); 404 if key unknown |
+| `/insights/quality` | `stale_days` 0..3650 (default 7) | per-source VIN/hp/state/year fill rates and stale share |
+
+```bash
+curl "localhost:8000/insights/comparables/leasehackr:2004?k=3"
+```
+
 ---
 
 ## Adding a source (the plugin point)

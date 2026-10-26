@@ -81,8 +81,13 @@ def test_load_history_filters_by_key(insights_con, insights_history):
     assert sorted(p.effective_monthly for p in pts) == sorted(p.effective_monthly for p in expected)
 
 
-def test_load_history_unknown_and_empty(insights_con, mem_con):
+def test_load_history_unknown_key(insights_con):
     assert load_history(insights_con, "nope") == []
+
+
+# insights_con is built on mem_con, so requesting both in one test yields the same
+# populated connection; the empty-table case must request mem_con alone.
+def test_load_history_empty_table(mem_con):
     assert load_history(mem_con) == []
     assert load_history(mem_con, "leasehackr:2001") == []
 
