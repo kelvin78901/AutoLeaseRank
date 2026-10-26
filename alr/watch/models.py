@@ -17,7 +17,7 @@ class WatchCreate(BaseModel):
     name: Annotated[str, StringConstraints(strip_whitespace=True, min_length=1, max_length=100)]
     make: Optional[str] = None             # case-insensitive equality with listing.make
     model: Optional[str] = None            # case-insensitive equality with listing.model
-    max_effective_monthly: float = Field(gt=0)
+    max_effective_monthly: float = Field(gt=0, allow_inf_nan=False)
     min_score: int = Field(0, ge=0, le=99)  # vs ScoredListing.personalized_score
     max_miles_per_month: Optional[int] = Field(None, gt=0)
 
