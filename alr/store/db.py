@@ -2,14 +2,18 @@
 for market features, and an append-only history table that is the substrate for
 self-supervised LTR labels (a listing that vanishes fast was a good deal).
 
-Two tables:
+Tables:
   current  - latest enriched snapshot the API serves from
   history  - one row per (crawl, listing): when we last saw it, its effective
              cost and stability signals. Diffing crawls tells us what sold.
+  vin_cache   - decoded VINs, so crawls skip re-hitting vPIC
+  feature_log - per-crawl feature vectors, substrate for outcome labels
+  watches     - saved searches (see alr/store/watches.py)
 """
 from __future__ import annotations
 
 import json
+import os
 from datetime import datetime, timezone
 
 import duckdb
@@ -18,8 +22,15 @@ from ..config import DB_PATH, FEATURE_LOG_KEEP
 from ..schema import EnrichedListing
 
 
-def connect() -> duckdb.DuckDBPyConnection:
-    con = duckdb.connect(str(DB_PATH))
+def connect(path: str | os.PathLike | None = None) -> duckdb.DuckDBPyConnection:
+    """Open the DB (default DB_PATH; ':memory:' for a fresh in-memory one) and set it up."""
+    con = duckdb.connect(str(path) if path is not None else str(DB_PATH))
+    setup(con)
+    return con
+
+
+def setup(con: duckdb.DuckDBPyConnection) -> None:
+    """Create every table/sequence if missing. Idempotent."""
     con.execute("""
         CREATE TABLE IF NOT EXISTS current (
             listing_key VARCHAR PRIMARY KEY,
@@ -38,8 +49,14 @@ def connect() -> duckdb.DuckDBPyConnection:
         CREATE TABLE IF NOT EXISTS feature_log (
             crawl_ts TIMESTAMP, listing_key VARCHAR, data JSON
         );
+        CREATE SEQUENCE IF NOT EXISTS watch_id_seq;
+        CREATE TABLE IF NOT EXISTS watches (
+            id BIGINT PRIMARY KEY DEFAULT nextval('watch_id_seq'),
+            name VARCHAR NOT NULL, make VARCHAR, model VARCHAR,
+            max_effective_monthly DOUBLE NOT NULL, min_score INTEGER NOT NULL,
+            max_miles_per_month INTEGER, created_at TIMESTAMPTZ NOT NULL
+        );
     """)
-    return con
 
 
 def save_snapshot(con: duckdb.DuckDBPyConnection, listings: list[EnrichedListing]) -> None:

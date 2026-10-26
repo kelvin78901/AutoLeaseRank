@@ -210,6 +210,26 @@ ranked deal links to a detail sub-page with its **SHAP** driver bars and a
 curl "localhost:8000/top_deals?listing_type=used&q=mach-e&states=VA,MD&sort=price_asc&top_k=5"
 ```
 
+### Saved searches (watches)
+
+A watch is a stored set of criteria (`make`, `model`, `max_effective_monthly`, `min_score`,
+`max_miles_per_month`) matched against the current snapshot, scored the same way as
+`/top_deals`. Watches live in the `watches` DuckDB table. Errors on `/watch*` return `{"error": "..."}`.
+Contract: `alr/watch/CONTRACT.md`.
+
+| Method | Path | Notes |
+|---|---|---|
+| POST   | `/watch` | create → 201 `Watch` (`name` and `max_effective_monthly` required) |
+| GET    | `/watch` | list, id ascending |
+| GET    | `/watch/{watch_id}` | one watch, 404 if unknown |
+| DELETE | `/watch/{watch_id}` | 204, empty body |
+| GET    | `/watch/{watch_id}/matches?limit=50` | `{watch, count, matches}`, best score first, `limit` 1..500 |
+
+```bash
+curl -X POST localhost:8000/watch -H 'content-type: application/json' \
+  -d '{"name":"cheap bmw","make":"BMW","max_effective_monthly":700,"min_score":40}'
+```
+
 ---
 
 ## Adding a source (the plugin point)
