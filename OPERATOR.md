@@ -62,6 +62,9 @@ Nothing to run. When a description arrives:
   `gate_policy: per_task`); `gate_reused`: a merge skipped re-running a task's `done_when` because the
   tree was identical. `final_gate_failed`: the end-of-run full suite failed; nothing was rolled back,
   the event lists the merge order. Find the culprit (usually the last merges), fix with `change`, re-run.
+- `prediction` (run start) and `run_finished.prediction`: the cost model's wall / cost / serial share and,
+  at the end, its error against the actual run. `flake_check` / `flaky_tests`: the plan's new test files
+  re-run with random seeds at integrate; a flaky result is reported with the seed that reproduces it.
 - `review_tier`: how the review was rated for this plan's change (`low` runs on sonnet/medium, `high`
   keeps the plan's model) and why; the same facts are at the top of the reviewer's context pack.
 - `integrate_skipped`: the integrate task had nothing to do (full suite and its own done_when green on
